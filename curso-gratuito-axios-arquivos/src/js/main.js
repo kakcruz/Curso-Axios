@@ -3,6 +3,30 @@ const dataEl = document.getElementById("data");
 const headersEl = document.getElementById("headers");
 const configEl = document.getElementById("config");
 
+axios.defaults.baseURL = 'https://jsonplaceholder.typicode.com/posts';
+
+axios.interceptors.request.use( // Interceptodes são mais ultilizados para fazer autorizações, ex: token
+  function (config) {
+    console.log(config.headers);
+    return config;
+  },
+  function (error) {
+    // Faça algo com erro de solicitação
+    return Promise.reject(error);
+  }
+);
+
+axios.interceptors.response.use(function (response) {
+    // Qualquer código de status que esteja dentro do intervalo de 2xx faz com que essa função seja acionada
+    // Faça algo com dados de resposta
+    return response;
+  }, function (error) {
+    // Qualquer código de status que esteja fora do intervalo de 2xx faz com que essa função seja acionada
+    // Faça algo com erro de resposta
+    return Promise.reject(error);
+  });
+
+
 const get = () => {
   // pegar dados no servidor
   const config = {
@@ -12,7 +36,7 @@ const get = () => {
   };
 
   axios
-    .get("https://jsonplaceholder.typicode.com/posts", config)
+    .get('posts', config)
     .then((response) => renderOutput(response));
 };
 
@@ -37,7 +61,8 @@ const put = () => {
     body: "bar",
     userId: 1,
   };
-  axios.put("https://jsonplaceholder.typicode.com/posts/1", data)
+  axios
+    .put("https://jsonplaceholder.typicode.com/posts/1", data)
     .then((response) => renderOutput(response));
 };
 
@@ -46,72 +71,83 @@ const patch = () => {
   const data = {
     body: "Laravue",
   };
-  axios.put("https://jsonplaceholder.typicode.com/posts/1", data)
+  axios
+    .put("https://jsonplaceholder.typicode.com/posts/1", data)
     .then((response) => renderOutput(response));
 };
 
-const del = () => { // deleta o dado no servidor
-    axios.delete("https://jsonplaceholder.typicode.com/posts/2")
+const del = () => {
+  // deleta o dado no servidor
+  axios
+    .delete("https://jsonplaceholder.typicode.com/posts/2")
     .then((response) => renderOutput(response));
 };
 
 const multiple = () => {
-  Promise.all( values = [ 
-    axios.get("https://jsonplaceholder.typicode.com/posts"),
-    axios.get("https://jsonplaceholder.typicode.com/users")
-])
-  .then((response)=> {
-    console.log(response)
+  Promise.all(
+    (values = [
+      axios.get("https://jsonplaceholder.typicode.com/posts"),
+      axios.get("https://jsonplaceholder.typicode.com/users"),
+    ])
+  ).then((response) => {
+    console.log(response);
   });
 };
 
-const transform = () => { // serve para juntar os dados. Ex: primeiro nome, segundo nome, junta os dois nome. Mesmo exemplo seria, campos de bairro, digitados separados, mas ao final deixa-los juntos.
-    const config = {
-        params: {
-          _limit: 2,
-        },
-        transformResponse: [function (data) { // transforma a resposta.
-            const payload = JSON.parse(data).map(o =>{
-                return{
-                    ...o,
-                    first_name: 'Karoline',
-                    las_name: 'Cruz',
-                    full_name: 'Karoline Cruz'
-                }
-            })
-        
-            return payload;
-          }],
-      };
-    
-      axios.get("https://jsonplaceholder.typicode.com/posts", config)
-        .then((response) => renderOutput(response));
+const transform = () => {
+  // serve para juntar os dados. Ex: primeiro nome, segundo nome, junta os dois nome. Mesmo exemplo seria, campos de bairro, digitados separados, mas ao final deixa-los juntos.
+  const config = {
+    params: {
+      _limit: 2,
+    },
+    transformResponse: [
+      function (data) {
+        // transforma a resposta.
+        const payload = JSON.parse(data).map((o) => {
+          return {
+            ...o,
+            first_name: "Karoline",
+            las_name: "Cruz",
+            full_name: "Karoline Cruz",
+          };
+        });
+
+        return payload;
+      },
+    ],
+  };
+
+  axios
+    .get("https://jsonplaceholder.typicode.com/posts", config)
+    .then((response) => renderOutput(response));
 };
 
 const errorHandling = () => {
-    axios.get("https://jsonplaceholder.typicode.com/postsz",)
+  axios
+    .get("https://jsonplaceholder.typicode.com/postsz")
     .then((response) => renderOutput(response))
-    .catch((error) =>{ renderOutput(error.response)
-        
-    })
+    .catch((error) => {
+      renderOutput(error.response);
+    });
 };
 
 const cancel = () => {
-    const controller = new AbortController();
-    const config = {
-        params: {
-          _limit: 2,
-        },
-        signal: controller.signal
-      };
-    
-      axios.get("https://jsonplaceholder.typicode.com/posts", config)
-            .then((response) => renderOutput(response))
-            .catch((e) => {
-                console.log(e.message)
-            })
+  const controller = new AbortController();
+  const config = {
+    params: {
+      _limit: 2,
+    },
+    signal: controller.signal,
+  };
 
-            controller.abort()
+  axios
+    .get("https://jsonplaceholder.typicode.com/posts", config)
+    .then((response) => renderOutput(response))
+    .catch((e) => {
+      console.log(e.message);
+    });
+
+  controller.abort();
 };
 
 const clear = () => {
